@@ -1,0 +1,23 @@
+{
+  "name": "retail-inventory-backend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0"
+  },
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed:demo": "node src/scripts/seed-demo-users.js",
+    "test": "node --test src/tests/api.test.js src/tests/products.api.test.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
