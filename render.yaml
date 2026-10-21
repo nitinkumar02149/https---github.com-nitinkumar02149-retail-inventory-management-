@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: retail-inventory-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_COOKIE_MAX_AGE_MS
+        value: "900000"
+      - key: SESSION_COOKIE_SAME_SITE
+        value: lax
+      - key: DEFAULT_TAX_RATE
+        value: "0.08"
+      - key: MONGODB_URI
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

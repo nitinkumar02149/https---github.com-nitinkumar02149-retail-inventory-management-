@@ -190,67 +190,31 @@ The integration suite covers product validation/search/permissions, auth and coo
 
 No deployment has been performed. Live URLs below are placeholders until you deploy and verify the hosted services.
 
-### Next.js on Vercel
+The repository includes a Render Blueprint at `render.yaml` for the Express API and a Next.js rewrite that proxies `/api/*` requests through Vercel. This keeps the browser and session cookie on the same site; do not set `NEXT_PUBLIC_API_URL` in Vercel. The rewrite uses the server-only `BACKEND_URL`.
 
-1. Import the GitHub repository into Vercel and set the project Root Directory to `frontend`.
-2. Use the existing Next.js framework preset. Build command: `npm run build`; output settings can remain at Vercel defaults.
-3. Set `NEXT_PUBLIC_API_URL` to the deployed backend origin, for example `https://<your-api-host>` (no `/api` suffix).
-4. Deploy, then test `/login`, `/dashboard`, `/products`, `/sales`, `/invoices`, and `/reports` on the Vercel domain.
+### Deployment order
 
-### Express backend on a Node host
+1. Create a MongoDB Atlas cluster and database user. Allow the Render service to connect through Atlas Network Access; do not expose MongoDB to the public internet. Keep the Atlas URI private.
+2. Import this GitHub repository into Vercel and set the project Root Directory to `frontend`. Keep the Next.js framework and build settings at their defaults. A first deploy can use the local rewrite target; its purpose is to obtain the Vercel production URL.
+3. In Render, create a Blueprint from this repository using `render.yaml`. Provide `MONGODB_URI` from Atlas and the exact Vercel production origin for `CORS_ORIGIN` (for example, `https://your-project.vercel.app`, without a trailing slash). Render generates `JWT_SECRET`; do not replace it with a committed value.
+4. In Vercel project settings, set the server-side `BACKEND_URL` to the Render service origin (for example, `https://retail-inventory-api.onrender.com`, without `/api`). Do not set `NEXT_PUBLIC_API_URL` in Vercel. Redeploy the frontend so the rewrite uses the production backend.
+5. Verify the Render `/api/health` endpoint, then test login and the products, inventory, sales, invoices, and reports flows on the Vercel production URL.
 
-Deploy `backend` as a Node.js service on a host that supports long-running Express processes and MongoDB replica-set transactions (for example, Render, Railway, or Fly.io). Set its Root Directory to `backend`, build/install with `npm install`, and start with `npm start`. Configure `PORT` from the host-provided port and set `NODE_ENV=production`.
-
-Set these production environment variables in the host dashboard: `MONGODB_URI` (Atlas replica-set URI), `JWT_SECRET` (fresh random 32+ character secret), `JWT_EXPIRES_IN`, `JWT_COOKIE_MAX_AGE_MS`, `SESSION_COOKIE_SAME_SITE`, `CORS_ORIGIN` (exact Vercel origin), and `DEFAULT_TAX_RATE`. For separate Vercel/API sites, use `SESSION_COOKIE_SAME_SITE=none` over HTTPS so the browser can send the HttpOnly cookie cross-site; `secure` is enabled automatically in production. Never allow wildcard CORS with credentialed cookies.
-
-In MongoDB Atlas, configure a database user, database permissions, and Network Access for the backend host. Do not expose MongoDB ports publicly. Seed demo users only in a development database; create production users through a trusted administrative process (there is no public registration route).
+`SESSION_COOKIE_SAME_SITE=lax` is intentional: the Vercel rewrite keeps API requests same-origin and avoids relying on third-party cookies. CORS must list the exact Vercel origin; never use `*` with credentialed cookies. Production user accounts must be created through a trusted administrative process; there is no public registration endpoint.
 
 ### URL placeholders
 
 - Live application: `[NOT DEPLOYED — add verified Vercel URL]`
-- Public GitHub repository: `[ADD PUBLIC GITHUB REPOSITORY URL]`
-- API base URL: `[ADD VERIFIED BACKEND URL]`
-
-## GitHub submission commands
-
-This workspace was initialized as a local Git repository, but it has no commit or remote configured. Review before staging:
-
-```powershell
-Set-Location 'C:\Users\nitin\OneDrive\Desktop\Dashboard\retail-inventory-management'
-if (-not (Test-Path .git)) { git init }
-git status --short
-git check-ignore -v backend/.env frontend/.env.local
-git check-ignore -v backend/.env.example frontend/.env.example
-```
-
-The first ignore check should report ignored env files; `.env.example` files should remain trackable. After reviewing the staged file list, commit:
-
-```powershell
-git add .
-git status --short
-git diff --cached --check
-git commit -m "Complete retail inventory sales management system"
-git branch -M main
-```
-
-Create the intended **public** GitHub repository in your account first, then connect its exact URL (replace the placeholder; do not use a guessed URL):
-
-```powershell
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_PUBLIC_REPOSITORY>.git
-git remote -v
-git push -u origin main
-```
-
-If `origin` already exists, verify it with `git remote -v` and use `git remote set-url origin <CORRECT_PUBLIC_REPOSITORY_URL>` only if it points to the wrong repository. Do not commit `.env` files, credentials, generated `node_modules`, or build output.
+- Backend API: `[NOT DEPLOYED — add verified Render URL]`
+- GitHub repository: `https://github.com/nitinkumar02149/https---github.com-nitinkumar02149-retail-inventory-management-`
 
 ## Submission checklist
 
 - [x] Frontend production build passes locally.
 - [x] Backend integration suite passes on an isolated local replica-set test database.
-- [x] Local health, Dashboard, Reports, authentication, product, inventory, sales, and invoice flows have been exercised.
 - [x] `.env` files are ignored; `.env.example` files contain placeholders.
 - [ ] Configure persistent production MongoDB Atlas URI and production JWT secret.
-- [ ] Deploy backend and set exact production CORS/frontend origins.
-- [ ] Deploy frontend to Vercel and configure `NEXT_PUBLIC_API_URL`.
+- [ ] Deploy backend to Render and set Atlas URI plus exact Vercel CORS origin.
+- [ ] Deploy frontend to Vercel and set server-side `BACKEND_URL`.
 - [ ] Verify production login, product management, inventory, sales, invoices, and reports.
 - [ ] Replace URL placeholders with verified live application, API, and GitHub URLs.
